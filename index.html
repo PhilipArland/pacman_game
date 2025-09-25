@@ -33,6 +33,7 @@
             background-color: #000;
             width: 100%;
             height: 70vh;
+            border-radius: .75rem;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -64,37 +65,8 @@
     </div>
 
     <script>
-        const pacman = {
-            row: 1,
-            col: 1,
-            radius: 0,
-            color: '#ffff00',
-            mouthAngle: 0,    // current mouth angle
-            mouthDir: 1       // 1 = opening, -1 = closing
-        };
-
-        function drawPacman(cellSizeX, cellSizeY) {
-            pacman.radius = Math.min(cellSizeX, cellSizeY) / 2 * 0.9;
-            const centerX = pacman.col * cellSizeX + cellSizeX / 2;
-            const centerY = pacman.row * cellSizeY + cellSizeY / 2;
-
-            ctx.fillStyle = pacman.color;
-            ctx.beginPath();
-
-            // Calculate mouth angle
-            const angle = pacman.mouthAngle;
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, pacman.radius, angle, 2 * Math.PI - angle);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        function updatePacmanMouth() {
-            // Animate between 0 and 0.3 * PI radians
-            pacman.mouthAngle += pacman.mouthDir * 0.05; // speed of mouth opening
-            if (pacman.mouthAngle > Math.PI * 0.2) pacman.mouthDir = -1;
-            if (pacman.mouthAngle < 0) pacman.mouthDir = 1;
-        }
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
 
         // Maze layout (1 = wall, 0 = dot, 2 = power pellet, 3 = empty)
         const maze = [
@@ -113,40 +85,81 @@
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         ];
 
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
         const rows = maze.length;
         const cols = maze[0].length;
 
-        function resizeCanvas() {
-            // Make canvas match container size
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+        const pacman = {
+            row: 1,
+            col: 1,
+            color: '#ffff00',
+            mouthAngle: 0,
+            mouthDir: 1,
+            direction: { row: 0, col: 0 }, // movement direction
+            facingAngle: 0, // radians Pac-Man is facing
+            moving: false // is Pac-Man currently moving to the next cell
+        };
 
-            // Calculate dynamic cell size
-            const cellSizeX = canvas.width / cols;
-            const cellSizeY = canvas.height / rows;
+        // Handle key inputs
+        window.addEventListener('keydown', (e) => {
+            switch (e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    pacman.direction = { row: -1, col: 0 };
+                    pacman.facingAngle = -Math.PI / 2;
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    pacman.direction = { row: 1, col: 0 };
+                    pacman.facingAngle = Math.PI / 2;
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    pacman.direction = { row: 0, col: -1 };
+                    pacman.facingAngle = Math.PI;
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    pacman.direction = { row: 0, col: 1 };
+                    pacman.facingAngle = 0;
+                    break;
+            }
+        });
 
-            drawMaze(cellSizeX, cellSizeY);
-            drawPacman(cellSizeX, cellSizeY); // draw Pac-Man on top
+        function updatePacmanMouth() {
+            pacman.mouthAngle += pacman.mouthDir * 0.05;
+            if (pacman.mouthAngle > Math.PI * 0.2) pacman.mouthDir = -1;
+            if (pacman.mouthAngle < 0) pacman.mouthDir = 1;
+        }
 
+        function drawPacman(cellSizeX, cellSizeY) {
+            const centerX = pacman.col * cellSizeX + cellSizeX / 2;
+            const centerY = pacman.row * cellSizeY + cellSizeY / 2;
+            const radius = Math.min(cellSizeX, cellSizeY) / 2 * 0.9;
+
+            ctx.fillStyle = pacman.color;
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            const angle = pacman.mouthAngle;
+            ctx.arc(centerX, centerY, radius, pacman.facingAngle + angle, pacman.facingAngle + 2 * Math.PI - angle);
+            ctx.closePath();
+            ctx.fill();
         }
 
         function drawMaze(cellSizeX, cellSizeY) {
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
                     const cell = maze[row][col];
-
-                    // Draw the background path
-                    ctx.fillStyle = '#000'; // default path color
+                    ctx.fillStyle = '#000';
                     ctx.fillRect(col * cellSizeX, row * cellSizeY, cellSizeX, cellSizeY);
 
                     if (cell === 1) {
-                        // Wall
                         ctx.fillStyle = '#0000ff';
                         ctx.fillRect(col * cellSizeX, row * cellSizeY, cellSizeX, cellSizeY);
                     } else if (cell === 0) {
-                        // Dot
                         ctx.fillStyle = '#ffc107';
                         ctx.beginPath();
                         ctx.arc(
@@ -158,42 +171,62 @@
                         );
                         ctx.fill();
                     } else if (cell === 2) {
-                        // Power pellet
                         ctx.fillStyle = '#ffc107';
                         ctx.beginPath();
                         ctx.arc(
                             col * cellSizeX + cellSizeX / 2,
                             row * cellSizeY + cellSizeY / 2,
-                            Math.min(cellSizeX, cellSizeY) / 3, // bigger than normal dot
+                            Math.min(cellSizeX, cellSizeY) / 3,
                             0,
                             2 * Math.PI
                         );
                         ctx.fill();
                     }
-                    // else if cell === 3, empty space, do nothing (already filled black)
                 }
             }
         }
 
-        function gameLoop() {
+        // Grid-based movement: move one cell per interval
+        let moveInterval = 200; // milliseconds per cell
+        let lastMoveTime = 0;
+
+        function gameLoop(timestamp) {
+            if (!canvas.width || !canvas.height) return;
             const cellSizeX = canvas.width / cols;
             const cellSizeY = canvas.height / rows;
 
-            drawMaze(cellSizeX, cellSizeY);
+            // Move Pac-Man only if interval passed
+            if (timestamp - lastMoveTime > moveInterval) {
+                const nextRow = pacman.row + pacman.direction.row;
+                const nextCol = pacman.col + pacman.direction.col;
+                if (nextRow >= 0 && nextRow < rows && nextCol >= 0 && nextCol < cols && maze[nextRow][nextCol] !== 1) {
+                    pacman.row = nextRow;
+                    pacman.col = nextCol;
+
+                    if (maze[nextRow][nextCol] === 0 || maze[nextRow][nextCol] === 2) {
+                        maze[nextRow][nextCol] = 3;
+                    }
+                }
+                lastMoveTime = timestamp;
+            }
+
             updatePacmanMouth();
+            drawMaze(cellSizeX, cellSizeY);
             drawPacman(cellSizeX, cellSizeY);
 
             requestAnimationFrame(gameLoop);
         }
 
-        // Start the loop
-        gameLoop();
+        // Resize canvas
+        function resizeCanvas() {
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+        }
 
-        // Resize canvas on load and on window resize
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+        requestAnimationFrame(gameLoop);
     </script>
-
 
 </body>
 
