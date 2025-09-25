@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pac-Man</title>
+    <title>Pac-Man Canvas</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -26,57 +26,13 @@
             padding: 15px;
         }
 
-        .maze {
-            width: 100%;
-            aspect-ratio: 28 / 31;
-            max-height: 70vh;
-            background-color: #000;
-            border: 3px solid #ffc107;
+        canvas {
+            display: block;
             margin: 0 auto;
-            position: relative;
-            display: grid;
-            grid-template-columns: repeat(28, 1fr);
-            grid-template-rows: repeat(31, 1fr);
-        }
-
-        .cell {
+            border: 3px solid #ffc107;
+            background-color: #000;
             width: 100%;
-            height: 100%;
-        }
-
-        .wall {
-            background-color: #0011ff;
-            box-shadow: inset 0 0 2px #00f;
-        }
-
-        .dot {
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dot::after {
-            content: "";
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background-color: #ff0;
-        }
-
-        .power {
-            background-color: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .power::after {
-            content: "";
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: #ff0;
+            height: 70vh;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -97,8 +53,8 @@
             </div>
         </div>
 
-        <!-- Maze -->
-        <div class="maze" id="maze"></div>
+        <!-- Canvas -->
+        <canvas id="gameCanvas"></canvas>
 
         <!-- Footer -->
         <div class="text-center mt-3">
@@ -108,65 +64,136 @@
     </div>
 
     <script>
-        // Maze layout (1 = wall, 0 = dot, 2 = power pellet, 3 = empty)
-        const maze = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 2, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 3, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-            [3, 3, 3, 3, 3, 1, 0, 1, 3, 3, 3, 0, 1, 3, 1, 0, 3, 3, 3, 1, 0, 1, 3, 3, 3, 3, 3, 3],
-            [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 0, 1, 3, 1, 1, 1, 3, 3, 3, 1, 1, 1, 3, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-            [3, 3, 3, 3, 3, 1, 0, 1, 3, 1, 3, 3, 3, 3, 3, 3, 3, 1, 3, 1, 0, 1, 3, 3, 3, 3, 3, 3],
-            [1, 1, 1, 1, 1, 1, 0, 1, 3, 1, 3, 1, 1, 3, 1, 1, 3, 1, 3, 1, 0, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 3, 3, 1, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 3, 1, 3, 1, 1, 1, 1, 1, 3, 1, 3, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 2, 0, 0, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 0, 0, 2, 0, 1],
-            [1, 1, 1, 1, 0, 1, 0, 1, 3, 1, 1, 1, 3, 3, 3, 1, 1, 1, 3, 1, 0, 1, 0, 1, 1, 1, 1, 1],
-            [3, 3, 3, 1, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 1, 3, 3, 3, 3],
-            [1, 1, 1, 1, 0, 1, 1, 1, 3, 1, 3, 1, 1, 1, 1, 1, 3, 1, 3, 1, 1, 1, 0, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 1, 0, 0, 3, 1, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 0, 0, 1, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 3, 1, 3, 1, 1, 3, 1, 1, 3, 1, 3, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 2, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        ];
+        const pacman = {
+            row: 1,
+            col: 1,
+            radius: 0,
+            color: '#ffff00',
+            mouthAngle: 0,    // current mouth angle
+            mouthDir: 1       // 1 = opening, -1 = closing
+        };
 
-        const mazeEl = document.getElementById("maze");
-        const startBtn = document.getElementById("startBtn");
+        function drawPacman(cellSizeX, cellSizeY) {
+            pacman.radius = Math.min(cellSizeX, cellSizeY) / 2 * 0.9;
+            const centerX = pacman.col * cellSizeX + cellSizeX / 2;
+            const centerY = pacman.row * cellSizeY + cellSizeY / 2;
 
-        function drawMaze(layout) {
-            mazeEl.innerHTML = "";
-            layout.forEach(row => {
-                row.forEach(cell => {
-                    const div = document.createElement("div");
-                    div.classList.add("cell");
-                    if (cell === 1) div.classList.add("wall");
-                    if (cell === 0) div.classList.add("dot");
-                    if (cell === 2) div.classList.add("power");
-                    mazeEl.appendChild(div);
-                });
-            });
+            ctx.fillStyle = pacman.color;
+            ctx.beginPath();
+
+            // Calculate mouth angle
+            const angle = pacman.mouthAngle;
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, pacman.radius, angle, 2 * Math.PI - angle);
+            ctx.closePath();
+            ctx.fill();
         }
 
-        startBtn.addEventListener("click", () => {
-            drawMaze(maze); // only one maze, just draw it
-        });
+        function updatePacmanMouth() {
+            // Animate between 0 and 0.3 * PI radians
+            pacman.mouthAngle += pacman.mouthDir * 0.05; // speed of mouth opening
+            if (pacman.mouthAngle > Math.PI * 0.2) pacman.mouthDir = -1;
+            if (pacman.mouthAngle < 0) pacman.mouthDir = 1;
+        }
 
-        // draw the maze on page load
-        drawMaze(maze);
+        // Maze layout (1 = wall, 0 = dot, 2 = power pellet, 3 = empty)
+        const maze = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 0, 0, 0, 1, 3, 3, 3, 1, 2, 0, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 1, 0, 1, 1, 1, 3, 3, 3, 1, 1, 1, 0, 1, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 2, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const rows = maze.length;
+        const cols = maze[0].length;
+
+        function resizeCanvas() {
+            // Make canvas match container size
+            canvas.width = canvas.clientWidth;
+            canvas.height = canvas.clientHeight;
+
+            // Calculate dynamic cell size
+            const cellSizeX = canvas.width / cols;
+            const cellSizeY = canvas.height / rows;
+
+            drawMaze(cellSizeX, cellSizeY);
+            drawPacman(cellSizeX, cellSizeY); // draw Pac-Man on top
+
+        }
+
+        function drawMaze(cellSizeX, cellSizeY) {
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const cell = maze[row][col];
+
+                    // Draw the background path
+                    ctx.fillStyle = '#000'; // default path color
+                    ctx.fillRect(col * cellSizeX, row * cellSizeY, cellSizeX, cellSizeY);
+
+                    if (cell === 1) {
+                        // Wall
+                        ctx.fillStyle = '#0000ff';
+                        ctx.fillRect(col * cellSizeX, row * cellSizeY, cellSizeX, cellSizeY);
+                    } else if (cell === 0) {
+                        // Dot
+                        ctx.fillStyle = '#ffc107';
+                        ctx.beginPath();
+                        ctx.arc(
+                            col * cellSizeX + cellSizeX / 2,
+                            row * cellSizeY + cellSizeY / 2,
+                            Math.min(cellSizeX, cellSizeY) / 6,
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                    } else if (cell === 2) {
+                        // Power pellet
+                        ctx.fillStyle = '#ffc107';
+                        ctx.beginPath();
+                        ctx.arc(
+                            col * cellSizeX + cellSizeX / 2,
+                            row * cellSizeY + cellSizeY / 2,
+                            Math.min(cellSizeX, cellSizeY) / 3, // bigger than normal dot
+                            0,
+                            2 * Math.PI
+                        );
+                        ctx.fill();
+                    }
+                    // else if cell === 3, empty space, do nothing (already filled black)
+                }
+            }
+        }
+
+        function gameLoop() {
+            const cellSizeX = canvas.width / cols;
+            const cellSizeY = canvas.height / rows;
+
+            drawMaze(cellSizeX, cellSizeY);
+            updatePacmanMouth();
+            drawPacman(cellSizeX, cellSizeY);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start the loop
+        gameLoop();
+
+        // Resize canvas on load and on window resize
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
     </script>
+
 
 </body>
 
