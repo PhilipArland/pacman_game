@@ -1,6 +1,6 @@
 
 window.addEventListener('DOMContentLoaded', () => {
-    const CELL_SIZE = 30;
+    const CELL_SIZE = 25;
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -13,31 +13,35 @@ window.addEventListener('DOMContentLoaded', () => {
     const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
     const originalMaze = [
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 0, 0, 1, 3, 3, 3, 1, 2, 0, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 1, 0, 1, 1, 1, 3, 3, 3, 1, 1, 1, 0, 1, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 2, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 2, 1],
+        [1, 0, 1, 0, 1, 1, 0, 0, 0, 2, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
+        [1, 0, 1, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     ];
+
     let maze = JSON.parse(JSON.stringify(originalMaze));
 
     const rows = maze.length;
     const cols = maze[0].length;
 
     const pacman = { row: 1, col: 1, direction: 'right', nextDirection: 'right', mouthAngle: 0, mouthDir: 1 };
+
     let ghosts = [
-        { row: 4, col: 9, color: 'red', direction: 'left', mode: 'scatter' },
-        { row: 4, col: 11, color: 'pink', direction: 'right', mode: 'scatter' },
-        { row: 5, col: 9, color: 'cyan', direction: 'up', mode: 'scatter' },
-        { row: 5, col: 11, color: 'orange', direction: 'down', mode: 'scatter' }
+        { row: 5, col: 12, color: 'red', direction: 'left', mode: 'scatter' },
+        { row: 5, col: 14, color: 'pink', direction: 'right', mode: 'scatter' },
+        { row: 6, col: 12, color: 'cyan', direction: 'up', mode: 'scatter' },
+        { row: 6, col: 14, color: 'orange', direction: 'down', mode: 'scatter' }
     ];
     let ghostIdleOffsets = ghosts.map(() => ({ x: 0, y: 0 }));
     let frameCount = 0;
@@ -71,10 +75,10 @@ window.addEventListener('DOMContentLoaded', () => {
     function resetGame() {
         pacman.row = 1; pacman.col = 1; pacman.direction = 'right'; pacman.nextDirection = 'right';
         ghosts = [
-            { row: 4, col: 9, color: 'red', direction: 'left', mode: 'scatter' },
-            { row: 4, col: 11, color: 'pink', direction: 'right', mode: 'scatter' },
-            { row: 5, col: 9, color: 'cyan', direction: 'up', mode: 'scatter' },
-            { row: 5, col: 11, color: 'orange', direction: 'down', mode: 'scatter' }
+            { row: 5, col: 12, color: 'red', direction: 'left', mode: 'scatter' },
+            { row: 5, col: 14, color: 'pink', direction: 'right', mode: 'scatter' },
+            { row: 6, col: 12, color: 'cyan', direction: 'up', mode: 'scatter' },
+            { row: 6, col: 14, color: 'orange', direction: 'down', mode: 'scatter' }
         ];
         ghostIdleOffsets = ghosts.map(() => ({ x: 0, y: 0 }));
         maze = JSON.parse(JSON.stringify(originalMaze));
@@ -131,6 +135,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // --- Utility functions for movement and collision (same as your original code) ---
     function canMove(r, c) { return maze[r] && maze[r][c] !== 1; }
+
     function movePacman() {
         let nr = pacman.row, nc = pacman.col;
         switch (pacman.nextDirection) {
