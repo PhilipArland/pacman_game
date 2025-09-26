@@ -27,7 +27,7 @@ window.addEventListener('DOMContentLoaded', () => {
         [1, 0, 1, 0, 1, 1, 0, 0, 0, 2, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
         [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
         [1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 1, 1, 0, 1],
+        [3, 0, 1, 1, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 1, 1, 0, 3],
         [1, 0, 0, 0, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 0, 0, 0, 1],
         [1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1],
         [1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
@@ -155,14 +155,45 @@ window.addEventListener('DOMContentLoaded', () => {
         switch (pacman.nextDirection) {
             case 'up': if (canMove(nr - 1, nc)) { nr--; pacman.direction = 'up'; } break;
             case 'down': if (canMove(nr + 1, nc)) { nr++; pacman.direction = 'down'; } break;
-            case 'left': if (canMove(nr, nc - 1)) { nc--; pacman.direction = 'left'; } break;
-            case 'right': if (canMove(nr, nc + 1)) { nc++; pacman.direction = 'right'; } break;
+            case 'left':
+                if (nc - 1 < 0) {
+                    // wrap around to right side
+                    nc = cols - 1;
+                } else if (canMove(nr, nc - 1)) {
+                    nc--;
+                    pacman.direction = 'left';
+                }
+                break;
+            case 'right':
+                if (nc + 1 >= cols) {
+                    // wrap around to left side
+                    nc = 0;
+                } else if (canMove(nr, nc + 1)) {
+                    nc++;
+                    pacman.direction = 'right';
+                }
+                break;
         }
-        pacman.row = nr; pacman.col = nc;
+        pacman.row = nr;
+        pacman.col = nc;
+
         const cell = maze[nr][nc];
-        if (cell === 0) { maze[nr][nc] = 3; score += 10; chompSound.currentTime = 0; chompSound.play(); }
-        if (cell === 2) { maze[nr][nc] = 3; powerMode = true; powerModeTimer = 300; score += 50; powerSound.currentTime = 0; powerSound.play(); }
+        if (cell === 0) {
+            maze[nr][nc] = 3;
+            score += 10;
+            chompSound.currentTime = 0;
+            chompSound.play();
+        }
+        if (cell === 2) {
+            maze[nr][nc] = 3;
+            powerMode = true;
+            powerModeTimer = 300;
+            score += 50;
+            powerSound.currentTime = 0;
+            powerSound.play();
+        }
     }
+
 
     function moveGhosts() {
         if (!gameRunning) return;
