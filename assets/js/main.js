@@ -21,19 +21,19 @@ window.addEventListener('DOMContentLoaded', () => {
     // Maze: 0 = dot, 1 = wall, 2 = power pellet, 3 = empty (eaten)
     const originalMaze = [
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
         [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
-        [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 2, 1],
-        [1, 0, 1, 0, 1, 1, 0, 0, 0, 2, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 1, 2, 1],
+        [1, 0, 1, 0, 1, 1, 0, 0, 0, 2, 0, 0, 3, 3, 3, 0, 0, 2, 0, 0, 0, 1, 1, 0, 1, 0, 1],
         [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 4, 4, 4, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1, 2, 1, 0, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1],
         [3, 0, 1, 1, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 1, 1, 0, 3],
-        [1, 0, 0, 0, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+        [1, 0, 0, 0, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 2, 1, 0, 0, 0, 1],
         [1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1],
-        [1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
+        [1, 2, 1, 0, 1, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
         [1, 0, 1, 2, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1],
-        [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 1, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 2, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1],
         [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     ];
 
@@ -72,22 +72,47 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Reset everything
     function resetGame() {
-        pacman.row = 1; pacman.col = 1; pacman.direction = 'right'; pacman.nextDirection = 'right';
-        ghosts = initialGhosts();
-        ghostIdleOffsets = ghosts.map(() => ({ x: 0, y: 0 }));
         maze = JSON.parse(JSON.stringify(originalMaze));
+
+        // Collect all positions where a power pellet (2) is placed
+        let powerSpots = [];
+        for (let r = 0; r < maze.length; r++) {
+            for (let c = 0; c < maze[r].length; c++) {
+                if (maze[r][c] === 2) {
+                    powerSpots.push({ r, c });
+                }
+            }
+        }
+
+        // Shuffle and pick 3 random spots
+        powerSpots = powerSpots.sort(() => Math.random() - 0.5);
+        let chosen = powerSpots.slice(0, 3);
+
+        // Reset all 2s to normal dots (0)
+        for (let { r, c } of powerSpots) {
+            maze[r][c] = 0;
+        }
+
+        // Restore only the chosen 3 as power pellets
+        for (let { r, c } of chosen) {
+            maze[r][c] = 2;
+        }
+
+        // Reset other game state
+        pacman.row = 1; pacman.col = 1;
+        pacman.direction = 'right';
+        pacman.nextDirection = 'right';
+        ghosts = initialGhosts();
         lives = 3;
         score = 0;
         powerMode = false;
         powerModeTimer = 0;
         gameRunning = false;
-        countdown = -1; // 👈 READY until Start clicked
-        pauseState = null;
-        pauseCountdown = 3;
-        pauseTimer = 60;
+        countdown = -1;
         updateScore();
         updateLives();
     }
+
 
     function updateScore() { document.getElementById('score').innerText = score; }
     function updateLives() { document.getElementById('lives').innerText = lives; }
