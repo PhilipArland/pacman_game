@@ -270,19 +270,41 @@
                     if (canMove(g.row + 1, g.col) && g.direction !== 'up') moves.push('down');
                     if (canMove(g.row, g.col - 1) && g.direction !== 'right') moves.push('left');
                     if (canMove(g.row, g.col + 1) && g.direction !== 'left') moves.push('right');
+
                     if (gameRunning) {
-                        let best = moves[Math.floor(Math.random() * moves.length)], minD = Infinity;
+                        let chosenDir = moves[Math.floor(Math.random() * moves.length)];
+                        let bestScore = powerMode ? -Infinity : Infinity;
+
                         moves.forEach(dir => {
                             let r = g.row, c = g.col;
-                            if (dir === 'up') r--; if (dir === 'down') r++; if (dir === 'left') c--; if (dir === 'right') c++;
+                            if (dir === 'up') r--;
+                            if (dir === 'down') r++;
+                            if (dir === 'left') c--;
+                            if (dir === 'right') c++;
+
                             const dist = Math.abs(r - pacman.row) + Math.abs(c - pacman.col);
-                            if (dist < minD) { minD = dist; best = dir; }
+
+                            if (!powerMode) {
+                                // Normal mode: choose closest (chase)
+                                if (dist < bestScore) { bestScore = dist; chosenDir = dir; }
+                            } else {
+                                // Power mode: choose farthest (flee)
+                                if (dist > bestScore) { bestScore = dist; chosenDir = dir; }
+                            }
                         });
-                        g.direction = best;
-                        switch (g.direction) { case 'up': g.row--; break; case 'down': g.row++; break; case 'left': g.col--; break; case 'right': g.col++; break; }
+
+                        g.direction = chosenDir;
+
+                        switch (g.direction) {
+                            case 'up': g.row--; break;
+                            case 'down': g.row++; break;
+                            case 'left': g.col--; break;
+                            case 'right': g.col++; break;
+                        }
                     }
                 });
             }
+
 
             function checkGhostCollisions() {
                 ghosts.forEach(g => {
@@ -354,27 +376,47 @@
 
             function drawGhosts(cellSizeX, cellSizeY) {
                 ghosts.forEach((g, i) => {
-                    let offsetX = ghostIdleOffsets[i].x;
-                    let offsetY = ghostIdleOffsets[i].y;
+                    let offsetX = 0, offsetY = 0;
+
+                    // Apply idle animation if game isn't actively running
+                    if (!gameRunning || countdown > 0) {
+                        offsetX = Math.sin(frameCount * 0.05 + i) * 3;
+                        offsetY = Math.cos(frameCount * 0.05 + i) * 2;
+                        ghostIdleOffsets[i] = { x: offsetX, y: offsetY };
+                    } else {
+                        // Use last idle offset while moving
+                        offsetX = ghostIdleOffsets[i].x;
+                        offsetY = ghostIdleOffsets[i].y;
+                    }
+
                     const x = g.col * cellSizeX + cellSizeX / 2 + offsetX;
                     const y = g.row * cellSizeY + cellSizeY / 2 + offsetY;
+
                     ctx.fillStyle = powerMode ? '#0000ff' : g.color;
+
+                    // Draw ghost body
                     ctx.beginPath();
                     ctx.arc(x, y - 2, CELL_SIZE / 2 - 2, Math.PI, 0);
                     ctx.fillRect(x - CELL_SIZE / 2 + 2, y - 2, CELL_SIZE - 4, CELL_SIZE / 2);
+
+                    // Draw ghost teeth
                     const toothWidth = (CELL_SIZE - 4) / 4;
                     for (let t = 0; t < 4; t++) {
                         if (t % 2 === 0) ctx.fillRect(x - CELL_SIZE / 2 + 2 + t * toothWidth, y + CELL_SIZE / 2 - 4, toothWidth, 4);
                     }
                     ctx.fill();
+
+                    // Draw eyes
                     ctx.fillStyle = '#fff';
                     ctx.fillRect(x - 6, y - 8, 4, 4);
                     ctx.fillRect(x + 2, y - 8, 4, 4);
+
                     ctx.fillStyle = '#000';
                     ctx.fillRect(x - 5, y - 7, 2, 2);
                     ctx.fillRect(x + 3, y - 7, 2, 2);
                 });
             }
+
 
             // --- Main Game Loop ---
             function gameLoop() {
@@ -413,9 +455,12 @@
                     ctx.font = `${cellSizeY}px 'Press Start 2P'`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
+                    const offsetX = 10;  // move right
+                    const offsetY = 20;  // move down
                     const text = countdown > 0 ? countdown : 'READY!';
-                    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+                    ctx.fillText(text, canvas.width / 2 + offsetX, canvas.height / 2 + offsetY);
                 }
+
 
                 updateScore();
                 updateLives();
