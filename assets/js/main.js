@@ -4,6 +4,11 @@ window.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
+    const introSound = new Audio('assets/sounds/intro.wav');
+    const chompSound = new Audio('assets/sounds/chomp.wav');
+    const powerSound = new Audio('assets/sounds/power.wav');
+    const deathSound = new Audio('assets/sounds/death.wav');
+
     const startBtn = document.getElementById('startBtn');
     const restartBtn = document.getElementById('restartBtn');
     const confirmYes = document.getElementById('confirmYes');
@@ -43,6 +48,7 @@ window.addEventListener('DOMContentLoaded', () => {
         { row: 6, col: 12, color: 'cyan', direction: 'up', mode: 'scatter' },
         { row: 6, col: 14, color: 'orange', direction: 'down', mode: 'scatter' }
     ];
+
     let ghostIdleOffsets = ghosts.map(() => ({ x: 0, y: 0 }));
     let frameCount = 0;
     const moveSpeed = 10;
@@ -100,6 +106,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // --- Start Button ---
     startBtn.addEventListener('click', () => {
         if (!gameRunning && countdown === 0) {
+            introSound.currentTime = 0;
+            introSound.play();
             countdown = 3;
             frameCount = 0;
             startBtn.disabled = true;
@@ -112,6 +120,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     restartBtn.addEventListener('click', () => {
         resetGame();
+        introSound.currentTime = 0;
+        introSound.play();
         countdown = 3;
         frameCount = 0;
         startBtn.disabled = true;
@@ -121,6 +131,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     confirmYes.addEventListener('click', () => {
         resetGame();
+        introSound.currentTime = 0;
+        introSound.play();
         countdown = 3;
         frameCount = 0;
         startBtn.disabled = true;
@@ -146,8 +158,8 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         pacman.row = nr; pacman.col = nc;
         const cell = maze[nr][nc];
-        if (cell === 0) { maze[nr][nc] = 3; score += 10; }
-        if (cell === 2) { maze[nr][nc] = 3; powerMode = true; powerModeTimer = 300; score += 50; }
+        if (cell === 0) { maze[nr][nc] = 3; score += 10; chompSound.currentTime = 0; chompSound.play(); }
+        if (cell === 2) { maze[nr][nc] = 3; powerMode = true; powerModeTimer = 300; score += 50; powerSound.currentTime = 0; powerSound.play(); }
     }
 
     function moveGhosts() {
@@ -200,6 +212,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 else {
                     lives--;
                     updateLives();
+                    deathSound.currentTime = 0; deathSound.play();
                     if (lives <= 0) {
                         gameRunning = false;
                         showModal("You Died!", "Try Again!");
@@ -354,6 +367,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
         if (allDotsEaten() && gameRunning) {
             gameRunning = false;
+            powerSound.pause();
+            introSound.play();
             showModal("Congratulations!", "You cleared all dots!");
         }
 
