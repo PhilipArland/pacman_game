@@ -25,7 +25,7 @@ window.addEventListener('DOMContentLoaded', () => {
         [1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
         [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 2, 1],
         [1, 0, 1, 0, 1, 1, 0, 0, 0, 2, 0, 0, 3, 3, 3, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1],
-        [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 4, 4, 4, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1],
         [1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 3, 3, 3, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 1],
         [3, 0, 1, 1, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 1, 1, 0, 3],
         [1, 0, 0, 0, 1, 0, 1, 0, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 0, 1, 0, 1, 0, 0, 0, 1],
@@ -45,11 +45,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const pacman = { row: 1, col: 1, direction: 'right', nextDirection: 'right', mouthAngle: 0, mouthDir: 1 };
 
     const initialGhosts = () => ([
-        { row: 5, col: 12, color: 'red', direction: 'left', mode: 'scatter' },
-        { row: 5, col: 14, color: 'pink', direction: 'right', mode: 'scatter' },
-        { row: 6, col: 12, color: 'cyan', direction: 'up', mode: 'scatter' },
-        { row: 6, col: 14, color: 'orange', direction: 'down', mode: 'scatter' }
+        { row: 6, col: 12, color: 'red', direction: 'up', mode: 'scatter', inHouse: true },
+        { row: 6, col: 14, color: 'pink', direction: 'up', mode: 'scatter', inHouse: true },
+        { row: 7, col: 12, color: 'cyan', direction: 'up', mode: 'scatter', inHouse: true },
+        { row: 7, col: 14, color: 'orange', direction: 'up', mode: 'scatter', inHouse: true }
     ]);
+
 
     let ghosts = initialGhosts();
     let ghostIdleOffsets = ghosts.map(() => ({ x: 0, y: 0 }));
@@ -194,17 +195,29 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function canGhostMove(r, c, dir) {
+        if (!maze[r]) return false;
+        const cell = maze[r][c];
+
+        if (cell === 1) return false; // wall
+        if (cell === 4) {
+            // Gate: ghosts can only move UP through it
+            return dir === 'up';
+        }
+        return true;
+    }
 
     function moveGhosts() {
         if (!gameRunning) return;
+
         ghosts.forEach(g => {
             if (g.row === -1 && g.col === -1) return; // skip eaten
 
             const moves = [];
-            if (canMove(g.row - 1, g.col) && g.direction !== 'down') moves.push('up');
-            if (canMove(g.row + 1, g.col) && g.direction !== 'up') moves.push('down');
-            if (canMove(g.row, g.col - 1) && g.direction !== 'right') moves.push('left');
-            if (canMove(g.row, g.col + 1) && g.direction !== 'left') moves.push('right');
+            if (canGhostMove(g.row - 1, g.col, 'up') && g.direction !== 'down') moves.push('up');
+            if (canGhostMove(g.row + 1, g.col, 'down') && g.direction !== 'up') moves.push('down');
+            if (canGhostMove(g.row, g.col - 1, 'left') && g.direction !== 'right') moves.push('left');
+            if (canGhostMove(g.row, g.col + 1, 'right') && g.direction !== 'left') moves.push('right');
 
             if (moves.length === 0) return;
 
@@ -234,6 +247,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
 
     function checkGhostCollisions() {
         if (!gameRunning && pauseState === 'lifeLost') return;
@@ -281,43 +295,50 @@ window.addEventListener('DOMContentLoaded', () => {
                 ctx.fillRect(c * cellSizeX, r * cellSizeY, cellSizeX, cellSizeY);
 
                 if (cell === 1) {
+                    // Wall
                     ctx.fillStyle = '#0000ff';
                     ctx.fillRect(c * cellSizeX, r * cellSizeY, cellSizeX, cellSizeY);
                 }
-                else if (cell === 0 || cell === 2) {
+                else if (cell === 0) {
+                    // Small dot
                     ctx.fillStyle = '#ffc107';
                     ctx.beginPath();
-
-                    if (cell === 0) {
-                        // normal small dot
-                        const radius = Math.min(cellSizeX, cellSizeY) / 6;
-                        ctx.arc(
-                            c * cellSizeX + cellSizeX / 2,
-                            r * cellSizeY + cellSizeY / 2,
-                            radius,
-                            0,
-                            Math.PI * 2
-                        );
-                    } else if (cell === 2) {
-                        // pulsing animation for power pellet
-                        const baseRadius = Math.min(cellSizeX, cellSizeY) / 3;
-                        const pulse = Math.sin(frameCount * 0.1) * 1; // oscillate between -2 and +2
-                        const radius = baseRadius + pulse;
-                        ctx.arc(
-                            c * cellSizeX + cellSizeX / 2,
-                            r * cellSizeY + cellSizeY / 2,
-                            radius,
-                            0,
-                            Math.PI * 2
-                        );
-                    }
-
+                    const radius = Math.min(cellSizeX, cellSizeY) / 6;
+                    ctx.arc(
+                        c * cellSizeX + cellSizeX / 2,
+                        r * cellSizeY + cellSizeY / 2,
+                        radius, 0, Math.PI * 2
+                    );
                     ctx.fill();
                 }
+                else if (cell === 2) {
+                    // Power pellet (animated pulse)
+                    ctx.fillStyle = '#ffc107';
+                    ctx.beginPath();
+                    const baseRadius = Math.min(cellSizeX, cellSizeY) / 3;
+                    const pulse = Math.sin(frameCount * 0.1) * 2;
+                    const radius = baseRadius + pulse;
+                    ctx.arc(
+                        c * cellSizeX + cellSizeX / 2,
+                        r * cellSizeY + cellSizeY / 2,
+                        radius, 0, Math.PI * 2
+                    );
+                    ctx.fill();
+                }
+                else if (cell === 4) {
+                    // Gate (top border line)
+                    ctx.fillStyle = '#45e739ff';
+                    ctx.fillRect(
+                        c * cellSizeX, 
+                        r * cellSizeY, 
+                        cellSizeX,   
+                        5          
+                    );
+                }
+
             }
         }
     }
-
 
     function drawPacman(cellSizeX, cellSizeY) {
         const cx = pacman.col * cellSizeX + cellSizeX / 2;
@@ -374,6 +395,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const cellSizeX = canvas.width / cols;
         const cellSizeY = canvas.height / rows;
         frameCount++;
+
+        updatePacmanMouth();
 
         // READY / Countdown before start
         if (countdown !== 0) {
