@@ -149,7 +149,10 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     // Utility movement/collision/drawing functions (same as before)
-    function canMove(r, c) { return maze[r] && maze[r][c] !== 1; }
+    function canMove(r, c) {
+        if (!maze[r]) return false;
+        return maze[r][c] !== 1 && maze[r][c] !== 4; // block walls & gate
+    }
 
     function movePacman() {
         let nr = pacman.row, nc = pacman.col;
@@ -196,7 +199,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     function canGhostMove(r, c, dir) {
-        if (!maze[r]) return false;
+        if (r < 0 || r >= rows || c < 0 || c >= cols) return false; // 👈 stop wrap
         const cell = maze[r][c];
 
         if (cell === 1) return false; // wall
@@ -211,16 +214,27 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!gameRunning) return;
 
         ghosts.forEach(g => {
-            if (g.row === -1 && g.col === -1) return; // skip eaten
+            if (g.row === -1 && g.col === -1) return;
 
-            const moves = [];
+            let moves = [];
+
+            // Normal allowed moves (no reversal)
             if (canGhostMove(g.row - 1, g.col, 'up') && g.direction !== 'down') moves.push('up');
             if (canGhostMove(g.row + 1, g.col, 'down') && g.direction !== 'up') moves.push('down');
             if (canGhostMove(g.row, g.col - 1, 'left') && g.direction !== 'right') moves.push('left');
             if (canGhostMove(g.row, g.col + 1, 'right') && g.direction !== 'left') moves.push('right');
 
-            if (moves.length === 0) return;
+            // If no moves found, allow reversal
+            if (moves.length === 0) {
+                if (canGhostMove(g.row - 1, g.col, 'up')) moves.push('up');
+                if (canGhostMove(g.row + 1, g.col, 'down')) moves.push('down');
+                if (canGhostMove(g.row, g.col - 1, 'left')) moves.push('left');
+                if (canGhostMove(g.row, g.col + 1, 'right')) moves.push('right');
+            }
 
+            if (moves.length === 0) return; // still stuck? then skip
+
+            // Pick best direction
             let chosenDir = moves[Math.floor(Math.random() * moves.length)];
             let bestScore = powerMode ? -Infinity : Infinity;
 
@@ -247,6 +261,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
 
 
     function checkGhostCollisions() {
@@ -329,10 +344,10 @@ window.addEventListener('DOMContentLoaded', () => {
                     // Gate (top border line)
                     ctx.fillStyle = '#45e739ff';
                     ctx.fillRect(
-                        c * cellSizeX, 
-                        r * cellSizeY, 
-                        cellSizeX,   
-                        5          
+                        c * cellSizeX,
+                        r * cellSizeY,
+                        cellSizeX,
+                        5
                     );
                 }
 
