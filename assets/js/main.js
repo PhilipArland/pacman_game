@@ -135,7 +135,7 @@ window.addEventListener('DOMContentLoaded', () => {
         resetGame();
         gameModal.hide();
     });
-    
+
     confirmYes.addEventListener('click', () => {
         resetGame();
         startBtn.innerText = "Start Game";
@@ -248,19 +248,45 @@ window.addEventListener('DOMContentLoaded', () => {
                 const cell = maze[r][c];
                 ctx.fillStyle = '#000';
                 ctx.fillRect(c * cellSizeX, r * cellSizeY, cellSizeX, cellSizeY);
-                if (cell === 1) ctx.fillStyle = '#0000ff';
-                else if (cell === 0 || cell === 2) ctx.fillStyle = '#ffc107';
-                if (cell === 0 || cell === 2) {
-                    ctx.beginPath();
-                    const radius = cell === 0 ? Math.min(cellSizeX, cellSizeY) / 6 : Math.min(cellSizeX, cellSizeY) / 3;
-                    ctx.arc(c * cellSizeX + cellSizeX / 2, r * cellSizeY + cellSizeY / 2, radius, 0, Math.PI * 2);
-                    ctx.fill();
-                } else if (cell === 1) {
+
+                if (cell === 1) {
+                    ctx.fillStyle = '#0000ff';
                     ctx.fillRect(c * cellSizeX, r * cellSizeY, cellSizeX, cellSizeY);
+                }
+                else if (cell === 0 || cell === 2) {
+                    ctx.fillStyle = '#ffc107';
+                    ctx.beginPath();
+
+                    if (cell === 0) {
+                        // normal small dot
+                        const radius = Math.min(cellSizeX, cellSizeY) / 6;
+                        ctx.arc(
+                            c * cellSizeX + cellSizeX / 2,
+                            r * cellSizeY + cellSizeY / 2,
+                            radius,
+                            0,
+                            Math.PI * 2
+                        );
+                    } else if (cell === 2) {
+                        // pulsing animation for power pellet
+                        const baseRadius = Math.min(cellSizeX, cellSizeY) / 3;
+                        const pulse = Math.sin(frameCount * 0.1) * 1; // oscillate between -2 and +2
+                        const radius = baseRadius + pulse;
+                        ctx.arc(
+                            c * cellSizeX + cellSizeX / 2,
+                            r * cellSizeY + cellSizeY / 2,
+                            radius,
+                            0,
+                            Math.PI * 2
+                        );
+                    }
+
+                    ctx.fill();
                 }
             }
         }
     }
+
 
     function drawPacman(cellSizeX, cellSizeY) {
         const cx = pacman.col * cellSizeX + cellSizeX / 2;
